@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Inventaire Livres</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0c0c;--surface:#161616;--surface2:#1e1e1e;--surface3:#262626;
+  --border:#252525;--border-light:#333;
+  --text:#e8e4de;--text-dim:#8a8580;--text-muted:#555;
+  --accent:#d4a574;--accent2:#e8c9a0;--accent-dim:rgba(212,165,116,.12);
+  --danger:#c0544e;--danger-bg:rgba(192,84,78,.08);
+  --success:#5a8a5e;--success-bg:rgba(90,138,94,.06);
+  --sold:#e8b84a;--sold-bg:rgba(232,184,74,.06);--sold-border:rgba(232,184,74,.18);
+  --paris:#7b8ec2;--paris-bg:rgba(123,142,194,.06);--paris-border:rgba(123,142,194,.2);
+  --dammarie:#c29a7b;--dammarie-bg:rgba(194,154,123,.06);--dammarie-border:rgba(194,154,123,.2);
+  --radius:12px;--radius-sm:8px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;line-height:1.6;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(212,165,116,.02),transparent);pointer-events:none;z-index:0}
+
+/* ── HEADER ── */
+.header{position:sticky;top:0;z-index:100;background:rgba(12,12,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 1rem}
+.header-inner{max-width:1320px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;gap:.75rem}
+.logo{display:flex;align-items:center;gap:.5rem;min-width:0}
+.logo-icon{font-size:1.1rem;flex-shrink:0}
+.logo h1{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+.logo-sub{font-size:.58rem;color:var(--text-dim);letter-spacing:.05em;text-transform:uppercase}
+.stats-bar{display:flex;gap:.6rem;align-items:center;flex-shrink:0}
+.stat{text-align:center;min-width:36px}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:500;color:var(--accent)}
+.stat-label{font-size:.5rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em}
+.stat-sold .stat-num{color:var(--sold)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .85rem;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.btn:hover,.btn:active{border-color:var(--border-light);color:var(--text)}
+.btn-accent{background:linear-gradient(135deg,var(--accent),#c49460);border-color:transparent;color:var(--bg);font-weight:600}
+.btn-accent:hover,.btn-accent:active{filter:brightness(1.1);color:var(--bg)}
+.btn-sm{padding:.3rem .6rem;font-size:.68rem;border-radius:7px}
+.btn-danger{border-color:rgba(192,84,78,.3);color:var(--danger);background:var(--danger-bg)}
+.btn-ghost{border:none;background:none;padding:.25rem .4rem}
+.icon{font-size:.9rem}
+
+/* ── TOOLBAR ── */
+.toolbar{max-width:1320px;margin:0 auto;padding:.75rem 1rem .2rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;position:relative;z-index:10}
+.toolbar-right{margin-left:auto;display:flex;gap:.4rem}
+
+/* ── SEARCH ── */
+.search-section{max-width:1320px;margin:0 auto;padding:.5rem 1rem 0;position:relative;z-index:10}
+.search-box{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:border-color .3s,box-shadow .3s}
+.search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(212,165,116,.06)}
+.search-row{display:flex;align-items:center;gap:.5rem;padding:0 .85rem}
+.search-icon{color:var(--text-muted);font-size:.95rem;transition:color .3s;flex-shrink:0}
+.search-box:focus-within .search-icon{color:var(--accent)}
+#searchInput{flex:1;background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);padding:.8rem 0;min-width:0}
+#searchInput::placeholder{color:var(--text-muted)}
+.search-badge{display:none;align-items:center;background:var(--accent-dim);border:1px solid rgba(212,165,116,.15);border-radius:14px;padding:.15rem .5rem;font-size:.65rem;color:var(--accent);white-space:nowrap;font-weight:500;flex-shrink:0}
+.search-badge.v{display:flex}
+.search-clear{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.9rem;padding:.2rem;border-radius:50%;transition:all .2s;display:none;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.search-clear.v{display:block}
+
+/* ── FILTERS (horizontal scroll on mobile) ── */
+.filters{display:flex;gap:.3rem;padding:.5rem 1rem;max-width:1320px;margin:0 auto;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+.filters::-webkit-scrollbar{display:none}
+.pill{padding:.32rem .65rem;border-radius:14px;font-size:.65rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.pill:active{transform:scale(.97)}
+.pill.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:.25rem;vertical-align:middle}
+.filter-label{font-size:.5rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-right:.1rem;flex-shrink:0}
+.sep{width:1px;height:16px;background:var(--border);margin:0 .2rem;flex-shrink:0}
+.pill-count{opacity:.4;margin-left:.15rem;font-size:.58rem}
+
+/* ── VIEW TOGGLE ── */
+.view-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.view-btn{padding:.4rem .7rem;font-size:.68rem;font-weight:500;border:none;background:none;color:var(--text-dim);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:.25rem;-webkit-tap-highlight-color:transparent}
+.view-btn.active{background:var(--accent-dim);color:var(--accent)}
+.vcount{font-family:'JetBrains Mono',monospace;font-size:.6rem;opacity:.6}
+
+/* ── TABLE / CARDS ── */
+.table-wrapper{max-width:1320px;margin:0 auto;padding:0 1rem 3rem;position:relative;z-index:1}
+
+/* Desktop table */
+.table-scroll{border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;background:var(--surface)}
+table{width:100%;border-collapse:collapse}
+thead th{position:sticky;top:0;z-index:10;background:var(--surface2);font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);padding:.65rem .75rem;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+thead th:first-child{width:45px;text-align:center}
+thead th.sortable{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+thead th.sortable:hover{color:var(--text)}
+thead th .sa{margin-left:.15rem;font-size:.45rem;opacity:.3}
+thead th.sorted .sa{opacity:1;color:var(--accent)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.02);transition:background .15s;animation:rowIn .25s ease both}
+tbody tr:hover{background:rgba(255,255,255,.015)}
+tbody tr.selling{animation:sellOut .4s ease forwards}
+@keyframes rowIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@keyframes sellOut{0%{background:rgba(232,184,74,.12)}100%{opacity:0;transform:translateX(20px)}}
+td{padding:.6rem .75rem;font-size:.8rem;color:var(--text);vertical-align:middle}
+td:first-child{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-dim);font-weight:500}
+
+.tag{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .45rem;border-radius:5px;font-size:.6rem;font-weight:500;white-space:nowrap}
+.tag .tdot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.loc-paris{background:var(--paris-bg);border:1px solid var(--paris-border);color:rgba(160,175,220,.85)}
+.loc-paris .tdot{background:var(--paris)}
+.loc-dammarie{background:var(--dammarie-bg);border:1px solid var(--dammarie-border);color:rgba(220,180,150,.85)}
+.loc-dammarie .tdot{background:var(--dammarie)}
+.zone-tag{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:var(--text-dim)}
+.zone-tag .tdot{background:var(--accent)}
+.match{background:rgba(212,165,116,.18);color:var(--accent2);border-radius:2px;padding:0 1px}
+.sold-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.12rem .4rem;border-radius:4px;font-size:.58rem;font-weight:500;background:var(--sold-bg);border:1px solid var(--sold-border);color:var(--sold)}
+
+.empty-state{text-align:center;padding:3rem 1.5rem;color:var(--text-dim)}
+.empty-state .eicon{font-size:1.8rem;margin-bottom:.5rem;opacity:.3}
+.empty-state p{font-size:.82rem}
+
+/* Row action buttons */
+.row-actions{display:flex;gap:.25rem;align-items:center;justify-content:flex-end}
+.ract{background:none;border:1px solid transparent;cursor:pointer;font-size:.6rem;padding:.2rem .4rem;border-radius:5px;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.ract-sold{color:var(--text-muted);border-color:transparent}
+.ract-sold:hover,.ract-sold:active{border-color:var(--sold-border);color:var(--sold);background:var(--sold-bg)}
+.ract-edit{color:var(--text-muted);border-color:transparent}
+.ract-edit:hover,.ract-edit:active{border-color:rgba(212,165,116,.2);color:var(--accent);background:var(--accent-dim)}
+.ract-restore{color:var(--text-dim);border-color:var(--border)}
+.ract-restore:hover,.ract-restore:active{border-color:rgba(90,138,94,.3);color:var(--success);background:var(--success-bg)}
+.ract-del{color:var(--text-muted);border-color:transparent}
+.ract-del:hover,.ract-del:active{border-color:rgba(192,84,78,.3);color:var(--danger);background:var(--danger-bg)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border-light);border-radius:16px 16px 0 0;width:100%;max-width:620px;max-height:92vh;max-height:92dvh;overflow-y:auto;animation:mIn .3s ease;-webkit-overflow-scrolling:touch}
+@keyframes mIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:5}
+.modal-header h2{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700}
+.mclose{background:none;border:none;color:var(--text-dim);font-size:1rem;cursor:pointer;padding:.3rem;border-radius:6px;-webkit-tap-highlight-color:transparent}
+.modal-body{padding:1.2rem}
+.tabs{display:flex;gap:0;margin-bottom:1rem;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:.45rem .85rem;font-size:.72rem;font-weight:500;color:var(--text-dim);cursor:pointer;border:none;border-bottom:2px solid transparent;transition:all .2s;background:none;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tc{display:none}.tc.active{display:block}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem}
+.fr.full{grid-template-columns:1fr}
+.fg{display:flex;flex-direction:column;gap:.2rem}
+.fg label{font-size:.62rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em}
+.fg input,.fg select,.fg textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .7rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);transition:border-color .2s;outline:none;-webkit-appearance:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg textarea{resize:vertical;min-height:120px;font-size:.76rem;line-height:1.5}
+.hint{font-size:.6rem;color:var(--text-muted);margin-top:.1rem;line-height:1.4}
+.hint code{background:rgba(255,255,255,.05);padding:.1rem .25rem;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--accent2)}
+.mfoot{padding:.8rem 0 0;display:flex;justify-content:flex-end;gap:.4rem}
+.mfoot-safe{padding-bottom:var(--safe-bottom)}
+
+/* Zone manager */
+.zm-loc{margin-bottom:1.2rem}
+.zm-loc-title{font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem}
+.zm-list{display:flex;flex-direction:column;gap:.25rem;margin-bottom:.4rem}
+.zm-item{display:flex;align-items:center;gap:.4rem;padding:.35rem .55rem;background:var(--surface2);border:1px solid var(--border);border-radius:7px;font-size:.75rem}
+.zm-item .zm-label{flex:1;color:var(--text-dim);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zm-item .zm-count{font-size:.6rem;color:var(--text-muted);flex-shrink:0}
+.zm-item button{background:none;border:none;cursor:pointer;font-size:.7rem;padding:.15rem .3rem;border-radius:4px;transition:all .15s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.zm-item .zm-edit{color:var(--text-muted)}
+.zm-item .zm-edit:hover{color:var(--accent);background:var(--accent-dim)}
+.zm-item .zm-del{color:var(--text-muted)}
+.zm-item .zm-del:hover{color:var(--danger);background:var(--danger-bg)}
+.zm-add-row{display:flex;gap:.35rem}
+.zm-add-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:.4rem .55rem;font-family:'DM Sans',sans-serif;font-size:.75rem;color:var(--text);outline:none;min-width:0}
+.zm-add-row input:focus{border-color:var(--accent)}
+/* Inline edit */
+.zm-edit-input{background:var(--surface3)!important;border:1px solid var(--accent)!important;border-radius:5px;padding:.25rem .4rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:var(--text);outline:none;flex:1;min-width:0}
+
+/* ── TOAST ── */
+.toast-c{position:fixed;bottom:calc(1rem + var(--safe-bottom));left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:.4rem;align-items:center;pointer-events:none;width:calc(100% - 2rem);max-width:420px}
+.toast{padding:.55rem 1rem;border-radius:9px;font-size:.75rem;font-weight:500;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 24px rgba(0,0,0,.4);pointer-events:all;animation:tIn .25s ease;width:100%}
+.toast.out{animation:tOut .25s ease forwards}
+.toast-success{background:#1a2e1a;border:1px solid rgba(90,138,94,.25);color:#a0d4a4}
+.toast-error{background:#2e1a1a;border:1px solid rgba(192,84,78,.25);color:#e0a0a0}
+.toast-info{background:#1a1a2e;border:1px solid rgba(123,142,194,.25);color:#a0b0e0}
+.toast-sold{background:#2e2510;border:1px solid var(--sold-border);color:var(--sold)}
+.toast-undo{background:none;border:1px solid var(--sold);color:var(--sold);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:600;padding:.2rem .55rem;border-radius:6px;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.toast-timer{width:100%;height:2px;background:rgba(255,255,255,.06);border-radius:1px;margin-top:.35rem;overflow:hidden}
+.toast-timer-bar{height:100%;background:var(--sold);border-radius:1px;transition:width linear}
+@keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes tOut{to{opacity:0;transform:translateY(-8px)}}
+
+.scroll-top{position:fixed;bottom:calc(1rem + var(--safe-bottom));right:1rem;width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--bg);border:none;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(8px);transition:all .3s;z-index:50;box-shadow:0 4px 12px rgba(212,165,116,.25);-webkit-tap-highlight-color:transparent}
+.scroll-top.v{opacity:1;transform:none}
+
+/* ── MOBILE CARD VIEW ── */
+.card-list{display:none;flex-direction:column;gap:.5rem;padding:.5rem 0}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.75rem;transition:all .15s;animation:rowIn .25s ease both}
+.card.selling{animation:sellOut .4s ease forwards}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.4rem}
+.card-num{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-muted);font-weight:500}
+.card-title{font-size:.85rem;font-weight:500;color:var(--text);line-height:1.3;flex:1;min-width:0}
+.card-auteur{font-size:.75rem;color:var(--text-dim);margin-bottom:.5rem}
+.card-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.5rem}
+.card-actions{display:flex;gap:.3rem;justify-content:flex-end}
+.card-sold-date{font-size:.65rem;color:var(--sold);margin-bottom:.4rem}
+
+/* ── RESPONSIVE ── */
+@media(min-width:769px){
+  .header{padding:0 2rem}
+  .header-inner{height:60px}
+  .toolbar,.search-section,.filters,.table-wrapper{padding-left:2rem;padding-right:2rem}
+  .modal-overlay{align-items:center;padding:2rem 1rem}
+  .modal{border-radius:14px;max-height:85vh}
+  /* Show table row actions on hover only */
+  .ract{opacity:0;transition:opacity .15s}
+  tbody tr:hover .ract{opacity:1}
+}
+@media(max-width:768px){
+  .stats-bar{gap:.4rem}
+  .stat{min-width:30px}
+  .stat-num{font-size:.78rem}
+  .stat-label{font-size:.45rem}
+  .logo h1{font-size:1rem}
+  .toolbar{gap:.3rem}
+  .btn{font-size:.68rem;padding:.4rem .65rem}
+  .btn .btn-label{display:none}
+  .fr{grid-template-columns:1fr}
+  /* Hide table, show cards */
+  .table-scroll{display:none}
+  .card-list{display:flex}
+  .toolbar-right .btn-label-desk{display:none}
+}
+@media(max-width:380px){
+  .logo-sub{display:none}
+  .view-toggle{font-size:.62rem}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">📚</span>
+      <div><h1>Inventaire Livres</h1><span class="logo-sub">Multi-stock</span></div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num" id="sTotal">0</div><div class="stat-label">Stock</div></div>
+      <div class="stat"><div class="stat-num" id="sParis">0</div><div class="stat-label">Paris</div></div>
+      <div class="stat"><div class="stat-num" id="sDam">0</div><div class="stat-label">Dam.</div></div>
+      <div class="stat stat-sold"><div class="stat-num" id="sSold">0</div><div class="stat-label">Vendus</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn btn-accent" onclick="openModal('add')"><span class="icon">＋</span> <span>Ajouter</span></button>
+  <button class="btn" onclick="openModal('import')"><span class="icon">📋</span> <span class="btn-label">Import</span></button>
+  <button class="btn" onclick="openModal('zones')"><span class="icon">🏷</span> <span class="btn-label">Zones</span></button>
+  <div class="view-toggle">
+    <button class="view-btn active" data-view="stock" onclick="setView('stock')">📦 <span class="vcount" id="vcS">0</span></button>
+    <button class="view-btn" data-view="sold" onclick="setView('sold')">💰 <span class="vcount" id="vcV">0</span></button>
+  </div>
+  <div class="toolbar-right">
+    <button class="btn" onclick="exportCSV()"><span class="icon">⬇</span><span class="btn-label-desk"> CSV</span></button>
+    <button class="btn btn-danger" onclick="confirmReset()"><span class="icon">🗑</span></button>
+  </div>
+</div>
+
+<section class="search-section">
+  <div class="search-box">
+    <div class="search-row">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Rechercher un livre…" autocomplete="off" enterkeyhint="search">
+      <div class="search-badge" id="sBadge"><span id="sRes">0</span></div>
+      <button class="search-clear" id="sClear" onclick="clearSearch()">✕</button>
+    </div>
+  </div>
+</section>
+
+<div class="filters" id="filtersBar"></div>
+
+<div class="table-wrapper">
+  <!-- Desktop table -->
+  <div class="table-scroll">
+    <table><thead><tr id="tableHead"></tr></thead><tbody id="tBody"></tbody></table>
+    <div class="empty-state" id="emptyTable" style="display:none"><div class="eicon">📭</div><p id="emptyMsg">Aucun livre trouvé</p></div>
+  </div>
+  <!-- Mobile cards -->
+  <div class="card-list" id="cardList"></div>
+  <div class="empty-state" id="emptyCards" style="display:none"><div class="eicon">📭</div><p id="emptyMsgM">Aucun livre trouvé</p></div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="mOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="mTitle">Ajouter</h2>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tabs" id="mTabs">
+        <button class="tab active" data-tab="add">Ajouter</button>
+        <button class="tab" data-tab="import">Import lot</button>
+        <button class="tab" data-tab="zones">Zones</button>
+        <button class="tab" data-tab="edit" id="tabEdit" style="display:none">Modifier</button>
+      </div>
+      <!-- ADD -->
+      <div class="tc active" id="pAdd">
+        <div class="fr"><div class="fg"><label>Lieu</label><select id="aLieu"></select></div><div class="fg"><label>Zone</label><select id="aZone"></select></div></div>
+        <div class="fr"><div class="fg"><label>Auteur</label><input type="text" id="aAuteur" placeholder="Nom (vide = –)"></div><div class="fg"><label>Titre</label><input type="text" id="aTitre" placeholder="Titre du livre" enterkeyhint="done"></div></div>
+        <div class="mfoot mfoot-safe"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-accent" onclick="addOne()">＋ Ajouter</button></div>
+      </div>
+      <!-- IMPORT -->
+      <div class="tc" id="pImport">
+        <div class="fr"><div class="fg"><label>Lieu</label><select id="iLieu"></select></div><div class="fg"><label>Zone</label><select id="iZone"></select></div></div>
+        <div class="fr full"><div class="fg"><label>Liste</label><textarea id="iText" placeholder="Un livre par ligne :&#10;Auteur | Titre"></textarea><span class="hint">Format : <code>Auteur | Titre</code> — juste le titre = auteur « – ».</span></div></div>
+        <div class="mfoot mfoot-safe"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-accent" onclick="importBatch()">📋 Importer</button></div>
+      </div>
+      <!-- ZONES -->
+      <div class="tc" id="pZones">
+        <p style="font-size:.75rem;color:var(--text-dim);margin-bottom:.8rem">Créez, renommez ou supprimez les zones pour chaque lieu.</p>
+        <div id="zmBody"></div>
+      </div>
+      <!-- EDIT BOOK -->
+      <div class="tc" id="pEdit">
+        <input type="hidden" id="eNum">
+        <div class="fr"><div class="fg"><label>Lieu</label><select id="eLieu"></select></div><div class="fg"><label>Zone</label><select id="eZone"></select></div></div>
+        <div class="fr"><div class="fg"><label>Auteur</label><input type="text" id="eAuteur"></div><div class="fg"><label>Titre</label><input type="text" id="eTitre" enterkeyhint="done"></div></div>
+        <div class="mfoot mfoot-safe"><button class="btn" onclick="closeModal()">Annuler</button><button class="btn btn-accent" onclick="saveEdit()">✓ Enregistrer</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-c" id="toasts"></div>
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const K='inv_v5_',KB=K+'books',KL=K+'locs',KZ=K+'zones',KS=K+'sold';
+
+const defLocs=[{id:'paris',name:'Paris – 62 rue Vasco de Gama',short:'Paris 15e',color:'paris'},{id:'dammarie',name:'Dammarie-lès-Lys',short:'Dammarie',color:'dammarie'}];
+const defZones={paris:[{id:'p_e5_fond',label:'Étage 5 (haut) – Tout au fond'},{id:'p_e5_milieu',label:'Étage 5 (haut) – Au milieu'},{id:'p_e5_devant',label:'Étage 5 (haut) – Tout devant'},{id:'p_e4_derriere',label:'Étage 4 – Derrière'},{id:'p_e4_devant',label:'Étage 4 – Devant'},{id:'p_e3',label:'Étage 3 – (à définir)'},{id:'p_e2',label:'Étage 2 – (à définir)'},{id:'p_e1',label:'Étage 1 (bas) – (à définir)'}],dammarie:[{id:'d_general',label:'(à définir sur place)'}]};
+const defBooks=[[1,"paris","p_e5_fond","Cliff Culessert & Paul Command","La méduse bleue"],[2,"paris","p_e5_fond","Émilie Frech","Chez les amateurs du Lutetia"],[3,"paris","p_e5_fond","–","The Amateur Madgson and the Boy"],[4,"paris","p_e5_fond","–","Lady B"],[5,"paris","p_e5_fond","–","La petite Vermillon"],[6,"paris","p_e5_fond","–","Marc-Edouard"],[7,"paris","p_e5_fond","–","L'âme de Billie Holiday"],[8,"paris","p_e5_fond","–","Say Hello to Black Jack"],[9,"paris","p_e5_fond","–","Seize nouvelles métaphores d'Ovide"],[10,"paris","p_e5_fond","Jean-Christophe Grange","L'empire des loups"],[11,"paris","p_e5_fond","Cliff Clusser","La flèche de Posidon"],[12,"paris","p_e5_fond","Christian Agnault","Un tournant de la vie"],[13,"paris","p_e5_fond","Caroline Keane","Alice chez le grand couturier"],[14,"paris","p_e5_fond","Cliff Clusser & Dirkurser","Le trésor du Kan"],[15,"paris","p_e5_fond","–","Alice chez les stars"],[16,"paris","p_e5_fond","Jim Harrison","JFK"],[17,"paris","p_e5_fond","Cliff Clusser","L'iceberg"],[18,"paris","p_e5_fond","Cliff Clusser & Jacques Dubrulle","La mer silencieuse"],[19,"paris","p_e5_fond","Maud Ventura","Mon mari"],[20,"paris","p_e5_fond","–","Les grands voyages des animaux"],[21,"paris","p_e5_fond","–","Écologie bienvenue"],[22,"paris","p_e5_fond","Voltaire","Candide"],[23,"paris","p_e5_fond","–","Anglais LV1 LV2 – Fiches brevet"],[24,"paris","p_e5_fond","–","Père Magnan – La pomme convient à la violette"],[25,"paris","p_e5_fond","Ken Lofley","L'homme de Saint-Pétersbourg"],[26,"paris","p_e5_fond","–","Queen de Alice et les félins"],[27,"paris","p_e5_fond","Diane Curtis Reagan","Drôle d'anniversaire"],[28,"paris","p_e5_fond","–","Petit bonheur parisien"],[29,"paris","p_e5_fond","Frédéric Léonard","La baronne meurt à 5h"],[30,"paris","p_e5_fond","Pierre Adrian","Des âmes simples"],[31,"paris","p_e5_fond","Graham Segrim","The Heart of the Matter"],[32,"paris","p_e5_fond","Iris Reiner d'Art / François Xenakis","Au bonheur des grands-mères / Vivre mieux / Attends-moi"],[33,"paris","p_e5_milieu","Donna Leon","Deux veuves pour un testament"],[34,"paris","p_e5_milieu","Sopoche Audibroix","–"],[35,"paris","p_e5_milieu","Annie Dalton","Le destin d'une étoile"],[36,"paris","p_e5_milieu","Kathy Rich","Déjà dide"],[37,"paris","p_e5_milieu","Peter Robinson","Ne jouez pas avec le feu"],[38,"paris","p_e5_milieu","Robert Godard","Reader"],[39,"paris","p_e5_milieu","Robert Godard","Malander a disparu"],[40,"paris","p_e5_milieu","Lisa Gardner","N'avoue jamais"],[41,"paris","p_e5_milieu","–","Arrêt crise au sarkozistan"],[42,"paris","p_e5_milieu","Iris Madot","Ceci, ceci"],[43,"paris","p_e5_milieu","–","Arsène Lupin, gentleman cambrioleur"],[44,"paris","p_e5_milieu","Albert Camus","Les Justes"],[45,"paris","p_e5_milieu","–","L'homme objet"],[46,"paris","p_e5_milieu","Annie Dalton","Toujours plus haut"],[47,"paris","p_e5_milieu","Loïc Lovril","Le passeur"],[48,"paris","p_e5_milieu","–","Le monde selon Freaknet"],[49,"paris","p_e5_milieu","–","Les derniers jours de Pompéi"],[50,"paris","p_e5_milieu","–","Enlèvement au Club des Cinq"],[51,"paris","p_e5_milieu","François Langlet","La fin de la mondialisation"],[52,"paris","p_e5_milieu","Alain Surgé","Le voleur de pandas"],[53,"paris","p_e5_milieu","–","Douze récits de l'Énéide"],[54,"paris","p_e5_milieu","–","Sherlock Holmes – Le fantôme de l'opéra"],[55,"paris","p_e5_milieu","–","Les Éveilleurs"],[56,"paris","p_e5_milieu","–","La culture d'entreprise – Repère gestion"],[57,"paris","p_e5_milieu","Isabelle Bono","Chez Maud Epierre"],[58,"paris","p_e5_milieu","Alexandre Jolian","La construction de soi, le métier de l'homme"],[59,"paris","p_e5_milieu","Ségalène René Léis","–"],[60,"paris","p_e5_milieu","Maurice Leblanc","L'aiguille creuse"],[61,"paris","p_e5_milieu","Serge Brussolo","La princesse noire"],[62,"paris","p_e5_milieu","Martin Gray","J'écris aux hommes de demain"],[63,"paris","p_e5_milieu","Iris Reiner d'Art","Au fil de la vie"],[64,"paris","p_e5_milieu","Jean Feiller","Les brumes de l'Anester"],[65,"paris","p_e5_devant","Jean-Michel Delacante","J'ai fermé le banc"],[66,"paris","p_e5_devant","Françoise Bourdin","Nom de la jeune fille"],[67,"paris","p_e5_devant","Louise Renison","À plus choupi, Trainier, Scripto"],[68,"paris","p_e5_devant","Susanna Tamaro","Va où ton cœur te porte"],[69,"paris","p_e5_devant","Hélène Berg","Journal"],[70,"paris","p_e5_devant","Hagone","La promesse"],[71,"paris","p_e5_devant","–","Je me souviens de l'esprit du temps"],[72,"paris","p_e5_devant","YH+ / Frédéric Rouvillon","Le professeur de musique, Liberté fondamentale"],[73,"paris","p_e5_devant","Eugène Ionesco","Rhinocéros"],[74,"paris","p_e5_devant","Pierre Gripari","La sorcière de la rue Mouffetard"],[75,"paris","p_e5_devant","Florence Reynaud","Un champ sous la terre"],[76,"paris","p_e5_devant","Michael Morpurgo","Robin des bois"],[77,"paris","p_e5_devant","–","16 métaphores d'Ovid"],[78,"paris","p_e5_devant","Frochua / Xénakis","Moi, j'aime pas la mer"],[79,"paris","p_e5_devant","Joseph Kessel","Le lion"],[80,"paris","p_e5_devant","Bruno Bettelheim","Psychanalyse des contes de fées"],[81,"paris","p_e5_devant","Frédéric Droit","Constitutionnel 2"],[82,"paris","p_e5_devant","Daniel Pennac","Cabot, Caboche"],[83,"paris","p_e5_devant","Voltaire","L'Ingénu"],[84,"paris","p_e5_devant","Jean Giraudoux","La guerre de Troie n'aura pas lieu"],[85,"paris","p_e5_devant","–","Les deux Orlas – Guide Maupassant"],[86,"paris","p_e5_devant","–","Fabuleux fabliste"],[87,"paris","p_e5_devant","–","Apprendre à photographier en numérique"],[88,"paris","p_e5_devant","Yao Feilia","80 degrés, Big Xana 1"],[89,"paris","p_e5_devant","Pagnol","Le château de ma mère"],[90,"paris","p_e5_devant","–","Les créatures du froid, Spooksville"],[91,"paris","p_e5_devant","Guillaume Musso","Sept ans après"],[92,"paris","p_e5_devant","Ansing Grun","La joie de la rencontre"],[93,"paris","p_e5_devant","C. Pascal","Au secours, je commence lundi"],[94,"paris","p_e5_devant","Franck Andrea","Le bonheur et une valise légère"],[95,"paris","p_e5_devant","Marie-Christine Elgerson / Flammarion Jeunesse","Louise et M. Molière"],[96,"paris","p_e5_devant","Larousse","Don Juan, Molière"],[97,"paris","p_e5_devant","François Langlet","Tant pis, nos enfants paieront"],[98,"paris","p_e5_devant","Louise Penny","Dide Cold"],[99,"paris","p_e5_devant","Hal Helphoro","L'équation du miracle / L'équitation"]];
+
+let books=[],locs=[],zones={},sold=[];
+let fLoc='all',fZone='all',sort={key:'num',asc:true},search='',view='stock';
+let undoTimer=null,undoData=null;
+
+function lj(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function load(){books=lj(KB)||[...defBooks];locs=lj(KL)||[...defLocs];zones=lj(KZ)||JSON.parse(JSON.stringify(defZones));sold=lj(KS)||[]}
+function save(){localStorage.setItem(KB,JSON.stringify(books));localStorage.setItem(KL,JSON.stringify(locs));localStorage.setItem(KZ,JSON.stringify(zones));localStorage.setItem(KS,JSON.stringify(sold))}
+function nextNum(){const a=[...books.map(b=>b[0]),...sold.map(s=>s[0])];return a.length?Math.max(...a)+1:1}
+function getLoc(id){return locs.find(l=>l.id===id)||{id,name:id,short:id,color:'paris'}}
+function getZone(lid,zid){return(zones[lid]||[]).find(z=>z.id===zid)||{id:zid,label:zid}}
+function norm(s){return s.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/['']/g,"'")}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function hl(t,q){if(!q)return esc(t);const n=norm(t),nq=norm(q),i=n.indexOf(nq);if(i===-1)return esc(t);return esc(t.substring(0,i))+'<span class="match">'+esc(t.substring(i,i+nq.length))+'</span>'+esc(t.substring(i+nq.length))}
+function fmtD(ts){const d=new Date(ts);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}
+
+function setView(v){view=v;document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));render()}
+
+function renderFilters(){
+  const bar=document.getElementById('filtersBar'),src=view==='stock'?books:sold;
+  const lc={};locs.forEach(l=>lc[l.id]=0);src.forEach(b=>{if(lc[b[1]]!==undefined)lc[b[1]]++});
+  const rel=fLoc==='all'?src:src.filter(b=>b[1]===fLoc);
+  let h='<span class="filter-label">Lieu</span>';
+  h+=`<button class="pill${fLoc==='all'?' active':''}" onclick="setLoc('all')"><span class="dot" style="background:var(--accent)"></span>Tous<span class="pill-count">${src.length}</span></button>`;
+  locs.forEach(l=>{h+=`<button class="pill${fLoc===l.id?' active':''}" onclick="setLoc('${l.id}')"><span class="dot" style="background:var(--${l.color})"></span>${l.short}<span class="pill-count">${lc[l.id]||0}</span></button>`});
+  h+='<span class="sep"></span><span class="filter-label">Zone</span>';
+  h+=`<button class="pill${fZone==='all'?' active':''}" onclick="setZone('all')"><span class="dot" style="background:var(--accent)"></span>Toutes</button>`;
+  (fLoc==='all'?locs.map(l=>l.id):[fLoc]).forEach(lid=>{(zones[lid]||[]).forEach(z=>{
+    const c=rel.filter(b=>b[2]===z.id).length;if(fLoc==='all'&&c===0)return;
+    const s=z.label.length>25?z.label.substring(0,23)+'…':z.label;
+    h+=`<button class="pill${fZone===z.id?' active':''}" onclick="setZone('${z.id}')"><span class="dot" style="background:var(--text-muted)"></span>${esc(s)}<span class="pill-count">${c}</span></button>`;
+  })});
+  bar.innerHTML=h;
+}
+
+function render(){
+  renderFilters();
+  const src=view==='stock'?books:sold;
+  const thead=document.getElementById('tableHead');
+  thead.innerHTML=view==='stock'
+    ?'<th class="sortable" onclick="doSort(\'num\')">N° <span class="sa">▲</span></th><th>Lieu</th><th>Zone</th><th class="sortable" onclick="doSort(\'auteur\')">Auteur <span class="sa">▲</span></th><th class="sortable" onclick="doSort(\'titre\')">Titre <span class="sa">▲</span></th><th style="width:90px"></th>'
+    :'<th class="sortable" onclick="doSort(\'num\')">N° <span class="sa">▲</span></th><th>Lieu</th><th>Zone</th><th class="sortable" onclick="doSort(\'auteur\')">Auteur <span class="sa">▲</span></th><th class="sortable" onclick="doSort(\'titre\')">Titre <span class="sa">▲</span></th><th>Vendu</th><th style="width:70px"></th>';
+
+  let f=src.filter(b=>{
+    if(fLoc!=='all'&&b[1]!==fLoc)return false;
+    if(fZone!=='all'&&b[2]!==fZone)return false;
+    if(search){const q=norm(search);return[b[0],getLoc(b[1]).name,getZone(b[1],b[2]).label,b[3],b[4]].some(v=>norm(v.toString()).includes(q))}
+    return true;
+  });
+  f.sort((a,b)=>{let va,vb;switch(sort.key){case'num':va=a[0];vb=b[0];break;case'auteur':va=norm(a[3]);vb=norm(b[3]);break;default:va=norm(a[4]);vb=norm(b[4])}if(va<vb)return sort.asc?-1:1;if(va>vb)return sort.asc?1:-1;return 0});
+
+  const tb=document.getElementById('tBody'),et=document.getElementById('emptyTable'),cl=document.getElementById('cardList'),ec=document.getElementById('emptyCards');
+  const emsg=view==='sold'?'Aucune vente enregistrée':'Aucun livre trouvé';
+
+  if(!f.length){
+    tb.innerHTML='';cl.innerHTML='';et.style.display='block';ec.style.display='block';
+    document.getElementById('emptyMsg').textContent=emsg;document.getElementById('emptyMsgM').textContent=emsg;
+  } else {
+    et.style.display='none';ec.style.display='none';
+    if(view==='stock'){
+      tb.innerHTML=f.map((b,i)=>{const loc=getLoc(b[1]),z=getZone(b[1],b[2]),d=Math.min(i*8,150);return`<tr style="animation-delay:${d}ms" id="row-${b[0]}"><td>${b[0]}</td><td><span class="tag loc-${loc.color}"><span class="tdot"></span>${loc.short}</span></td><td><span class="tag zone-tag"><span class="tdot"></span>${hl(z.label,search)}</span></td><td>${hl(b[3],search)}</td><td>${hl(b[4],search)}</td><td><div class="row-actions"><button class="ract ract-edit" onclick="editBook(${b[0]})">✏️ Modifier</button><button class="ract ract-sold" onclick="markSold(${b[0]})">💰 Vendu</button></div></td></tr>`}).join('');
+      cl.innerHTML=f.map((b,i)=>{const loc=getLoc(b[1]),z=getZone(b[1],b[2]),d=Math.min(i*8,150);return`<div class="card" style="animation-delay:${d}ms" id="card-${b[0]}"><div class="card-top"><span class="card-num">#${b[0]}</span><div class="card-tags"><span class="tag loc-${loc.color}"><span class="tdot"></span>${loc.short}</span><span class="tag zone-tag"><span class="tdot"></span>${hl(z.label,search)}</span></div></div><div class="card-title">${hl(b[4],search)}</div><div class="card-auteur">${hl(b[3],search)}</div><div class="card-actions"><button class="ract ract-edit" style="opacity:1" onclick="editBook(${b[0]})">✏️ Modifier</button><button class="ract ract-sold" style="opacity:1;border-color:var(--sold-border);color:var(--sold);background:var(--sold-bg)" onclick="markSold(${b[0]})">💰 Vendu</button></div></div>`}).join('');
+    } else {
+      tb.innerHTML=f.map((b,i)=>{const loc=getLoc(b[1]),z=getZone(b[1],b[2]),d=Math.min(i*8,150),sd=b[5]?fmtD(b[5]):'–';return`<tr style="animation-delay:${d}ms;opacity:.7"><td>${b[0]}</td><td><span class="tag loc-${loc.color}"><span class="tdot"></span>${loc.short}</span></td><td><span class="tag zone-tag"><span class="tdot"></span>${hl(z.label,search)}</span></td><td>${hl(b[3],search)}</td><td>${hl(b[4],search)}</td><td><span class="sold-badge">📅 ${sd}</span></td><td><button class="ract ract-restore" style="opacity:1" onclick="restoreBook(${b[0]})">↩ Remettre</button><button class="ract ract-del" style="opacity:1" onclick="deleteSold(${b[0]})">🗑</button></td></tr>`}).join('');
+      cl.innerHTML=f.map((b,i)=>{const loc=getLoc(b[1]),z=getZone(b[1],b[2]),d=Math.min(i*8,150),sd=b[5]?fmtD(b[5]):'–';return`<div class="card" style="animation-delay:${d}ms;opacity:.7"><div class="card-top"><span class="card-num">#${b[0]}</span><div class="card-tags"><span class="tag loc-${loc.color}"><span class="tdot"></span>${loc.short}</span><span class="tag zone-tag"><span class="tdot"></span>${z.label}</span></div></div><div class="card-title">${esc(b[4])}</div><div class="card-auteur">${esc(b[3])}</div><div class="card-sold-date">Vendu le ${sd}</div><div class="card-actions"><button class="ract ract-restore" style="opacity:1;border-color:var(--border)" onclick="restoreBook(${b[0]})">↩ Remettre</button><button class="ract ract-del" style="opacity:1;border-color:rgba(192,84,78,.3);color:var(--danger)" onclick="deleteSold(${b[0]})">🗑 Supprimer</button></div></div>`}).join('');
+    }
+  }
+
+  document.getElementById('sTotal').textContent=books.length;
+  document.getElementById('sParis').textContent=books.filter(b=>b[1]==='paris').length;
+  document.getElementById('sDam').textContent=books.filter(b=>b[1]==='dammarie').length;
+  document.getElementById('sSold').textContent=sold.length;
+  document.getElementById('vcS').textContent=books.length;
+  document.getElementById('vcV').textContent=sold.length;
+
+  const badge=document.getElementById('sBadge'),clr=document.getElementById('sClear');
+  if(search){badge.classList.add('v');clr.classList.add('v');document.getElementById('sRes').textContent=f.length}
+  else{badge.classList.remove('v');clr.classList.remove('v')}
+
+  document.querySelectorAll('thead th.sortable').forEach(th=>{th.classList.remove('sorted');const s=th.querySelector('.sa');if(s)s.textContent='▲'});
+  const si={num:0,auteur:3,titre:4},ths=document.querySelectorAll('thead th');
+  if(ths[si[sort.key]]){ths[si[sort.key]].classList.add('sorted');const s=ths[si[sort.key]].querySelector('.sa');if(s)s.textContent=sort.asc?'▲':'▼'}
+}
+
+// ═══ SELECTS ═══
+function popSel(){
+  ['aLieu','iLieu','eLieu'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML=locs.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('');s.onchange=()=>upZS(id.replace('Lieu','Zone'),s.value)});
+  upZS('aZone',locs[0]?.id);upZS('iZone',locs[0]?.id);upZS('eZone',locs[0]?.id);
+}
+function upZS(sid,lid){const s=document.getElementById(sid);if(!s)return;s.innerHTML=(zones[lid]||[]).map(z=>`<option value="${z.id}">${esc(z.label)}</option>`).join('')}
+
+// ═══ ZONE MANAGER ═══
+let renameState=null;
+function renderZM(){
+  document.getElementById('zmBody').innerHTML=locs.map(loc=>{
+    const zl=zones[loc.id]||[];
+    const items=zl.map((z,idx)=>{const c=books.filter(b=>b[2]===z.id).length;
+      const isEditing=renameState&&renameState.lid===loc.id&&renameState.zid===z.id;
+      if(isEditing){
+        return`<div class="zm-item"><input class="zm-edit-input" data-ren-lid="${loc.id}" data-ren-zid="${z.id}" value="${esc(z.label)}" autofocus><span class="zm-count">${c}</span><button class="zm-edit" onclick="confirmRename(this)" title="Valider">✓</button><button class="zm-del" onclick="renameState=null;renderZM()" title="Annuler">✕</button></div>`;
+      }
+      return`<div class="zm-item"><span class="zm-label">${esc(z.label)}</span><span class="zm-count">${c}</span><button class="zm-edit" onclick="startRename('${loc.id}','${z.id}')" title="Renommer">✏️</button><button class="zm-del" onclick="delZone('${loc.id}','${z.id}')" title="Supprimer">✕</button></div>`}).join('');
+    return`<div class="zm-loc"><div class="zm-loc-title"><span class="tdot" style="background:var(--${loc.color});width:8px;height:8px;border-radius:50%;display:inline-block"></span>${esc(loc.name)}</div><div class="zm-list">${items||'<span style="font-size:.72rem;color:var(--text-muted)">Aucune zone</span>'}</div><div class="zm-add-row"><input id="zmIn_${loc.id}" placeholder="Nouvelle zone…" onkeydown="if(event.key==='Enter')addZone('${loc.id}')"><button class="btn btn-sm btn-accent" onclick="addZone('${loc.id}')">＋</button></div></div>`}).join('');
+  // Focus + select the edit input if renaming
+  if(renameState){const inp=document.querySelector('.zm-edit-input[data-ren-zid]');if(inp){inp.focus();inp.select();inp.addEventListener('keydown',e=>{if(e.key==='Enter')confirmRename(inp);if(e.key==='Escape'){renameState=null;renderZM()}})}}
+}
+function addZone(lid){const inp=document.getElementById('zmIn_'+lid),l=inp.value.trim();if(!l){toast('Entrez un nom','error');return}if(!zones[lid])zones[lid]=[];zones[lid].push({id:lid+'_'+Date.now(),label:l});save();inp.value='';renderZM();popSel();render();toast(`Zone « ${l} » ajoutée`,'success')}
+function delZone(lid,zid){const c=books.filter(b=>b[2]===zid).length;if(c>0){toast(`${c} livre${c>1?'s':''} ici — déplacez-les d'abord`,'error');return}zones[lid]=(zones[lid]||[]).filter(z=>z.id!==zid);save();renderZM();popSel();render();toast('Zone supprimée','info')}
+function startRename(lid,zid){renameState={lid,zid};renderZM()}
+function confirmRename(el){
+  const inp=el.tagName==='INPUT'?el:el.closest('.zm-item').querySelector('.zm-edit-input');
+  if(!inp)return;
+  const lid=inp.dataset.renLid,zid=inp.dataset.renZid,v=inp.value.trim();
+  if(!v){toast('Nom vide','error');return}
+  const z=(zones[lid]||[]).find(z=>z.id===zid);if(z)z.label=v;
+  renameState=null;save();renderZM();popSel();render();toast('Zone renommée','success');
+}
+
+// ═══ EDIT BOOK ═══
+function editBook(num){
+  const b=books.find(b=>b[0]===num);if(!b)return;
+  document.getElementById('eNum').value=num;
+  document.getElementById('eLieu').value=b[1];
+  upZS('eZone',b[1]);
+  setTimeout(()=>{document.getElementById('eZone').value=b[2]},10);
+  document.getElementById('eAuteur').value=b[3];
+  document.getElementById('eTitre').value=b[4];
+  openModal('edit');
+}
+function saveEdit(){
+  const num=parseInt(document.getElementById('eNum').value);
+  const b=books.find(b=>b[0]===num);if(!b)return;
+  b[1]=document.getElementById('eLieu').value;
+  b[2]=document.getElementById('eZone').value;
+  b[3]=document.getElementById('eAuteur').value.trim()||'–';
+  const t=document.getElementById('eTitre').value.trim();
+  if(!t){toast('Titre requis','error');return}
+  b[4]=t;save();render();closeModal();
+  toast(`N°${num} modifié`,'success');
+}
+
+// ═══ SOLD / UNDO ═══
+function markSold(num){
+  const idx=books.findIndex(b=>b[0]===num);if(idx===-1)return;
+  const book=books[idx],titre=book[4];
+  const row=document.getElementById('row-'+num),card=document.getElementById('card-'+num);
+  if(row)row.classList.add('selling');if(card)card.classList.add('selling');
+  setTimeout(()=>{
+    books.splice(idx,1);const se=[...book,Date.now()];sold.push(se);save();render();
+    if(undoTimer)clearTimeout(undoTimer);undoData={book,se};showUndo(titre);
+  },350);
+}
+function showUndo(titre){
+  const c=document.getElementById('toasts');c.querySelectorAll('.toast-sold').forEach(t=>t.remove());
+  const t=document.createElement('div');t.className='toast toast-sold';
+  const short=titre.length>25?titre.substring(0,23)+'…':titre;
+  t.innerHTML=`<div style="flex:1"><div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap"><span>💰 « ${esc(short)} » vendu</span><button class="toast-undo" onclick="undoSold()">↩ Annuler</button></div><div class="toast-timer"><div class="toast-timer-bar" id="undoBar" style="width:100%"></div></div></div>`;
+  c.appendChild(t);
+  requestAnimationFrame(()=>{const bar=document.getElementById('undoBar');if(bar){bar.style.width='0%';bar.style.transitionDuration='8s'}});
+  undoTimer=setTimeout(()=>{undoData=null;t.classList.add('out');setTimeout(()=>t.remove(),300)},8000);
+}
+function undoSold(){
+  if(!undoData)return;clearTimeout(undoTimer);
+  const si=sold.findIndex(s=>s[0]===undoData.se[0]);if(si!==-1)sold.splice(si,1);
+  books.push(undoData.book);books.sort((a,b)=>a[0]-b[0]);save();render();undoData=null;
+  document.querySelectorAll('.toast-sold').forEach(t=>t.remove());toast('Annulé — remis en stock','success');
+}
+function restoreBook(num){
+  const i=sold.findIndex(s=>String(s[0])===String(num));if(i===-1)return;
+  books.push(sold[i].slice(0,5));sold.splice(i,1);books.sort((a,b)=>a[0]-b[0]);save();render();toast("Remis en stock","success");
+}
+function deleteSold(num){
+  const i=sold.findIndex(s=>String(s[0])===String(num));
+  if(i===-1){toast("Livre introuvable","error");return}
+  try{if(!confirm("Supprimer ce livre vendu de l'historique ?"))return}catch(e){return}
+  sold.splice(i,1);save();render();toast("Supprime de l'historique","info");
+}
+
+// ═══ ACTIONS ═══
+function setLoc(v){fLoc=v;fZone='all';render()}
+function setZone(v){fZone=v;render()}
+function doSort(k){if(sort.key===k)sort.asc=!sort.asc;else sort={key:k,asc:true};render()}
+function clearSearch(){document.getElementById('searchInput').value='';search='';render();document.getElementById('searchInput').focus()}
+
+function addOne(){
+  const lieu=document.getElementById('aLieu').value,zone=document.getElementById('aZone').value;
+  const auteur=document.getElementById('aAuteur').value.trim()||'–',titre=document.getElementById('aTitre').value.trim();
+  if(!titre){toast('Titre requis','error');return}if(!zone){toast('Créez une zone d\'abord','error');return}
+  const n=nextNum();books.push([n,lieu,zone,auteur,titre]);save();render();
+  document.getElementById('aAuteur').value='';document.getElementById('aTitre').value='';
+  toast(`« ${titre} » ajouté — N°${n}`,'success');
+}
+function importBatch(){
+  const lieu=document.getElementById('iLieu').value,zone=document.getElementById('iZone').value;
+  const raw=document.getElementById('iText').value.trim();
+  if(!raw){toast('Collez la liste','error');return}if(!zone){toast('Créez une zone','error');return}
+  let c=0;raw.split('\n').map(l=>l.trim()).filter(l=>l).forEach(line=>{
+    let a='–',t=line;if(line.includes('|')){const p=line.split('|');a=p[0].trim()||'–';t=p.slice(1).join('|').trim()}
+    if(!t)return;books.push([nextNum(),lieu,zone,a,t]);c++;
+  });
+  save();render();document.getElementById('iText').value='';toast(`${c} livre${c>1?'s':''} importé${c>1?'s':''}`,'success');closeModal();
+}
+function confirmReset(){if(!confirm('Réinitialiser tout ?'))return;books=[...defBooks];locs=[...defLocs];zones=JSON.parse(JSON.stringify(defZones));sold=[];save();popSel();render();toast('Réinitialisé','info')}
+function exportCSV(){
+  const bom='\uFEFF';let h='Numéro;Lieu;Zone;Auteur;Titre;Statut;Date vente\n';
+  const rows=[...books.map(b=>[b[0],getLoc(b[1]).name,getZone(b[1],b[2]).label,b[3],b[4],'En stock','']),...sold.map(b=>[b[0],getLoc(b[1]).name,getZone(b[1],b[2]).label,b[3],b[4],'Vendu',b[5]?fmtD(b[5]):''])];
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob([bom+h+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='inventaire_livres.csv';a.click();URL.revokeObjectURL(url);toast('CSV exporté','success');
+}
+
+// ═══ MODAL ═══
+function openModal(tab){document.getElementById('mOverlay').classList.add('open');switchTab(tab||'add')}
+function closeModal(){document.getElementById('mOverlay').classList.remove('open');document.getElementById('tabEdit').style.display='none'}
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  if(id==='edit')document.getElementById('tabEdit').style.display='';
+  const btn=document.querySelector(`.tab[data-tab="${id}"]`);if(btn)btn.classList.add('active');
+  const p=document.getElementById('p'+id.charAt(0).toUpperCase()+id.slice(1));if(p)p.classList.add('active');
+  const titles={add:'Ajouter un livre',import:'Import par lot',zones:'Gérer les zones',edit:'Modifier un livre'};
+  document.getElementById('mTitle').textContent=titles[id]||'';
+  if(id==='zones')renderZM();
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+
+function toast(msg,type='info'){const c=document.getElementById('toasts'),t=document.createElement('div');t.className=`toast toast-${type}`;t.innerHTML=(type==='success'?'✓':type==='error'?'✗':'ℹ')+' '+esc(msg);c.appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300)},2500)}
+
+document.getElementById('searchInput').addEventListener('input',e=>{search=e.target.value.trim();render()});
+window.addEventListener('scroll',()=>{document.getElementById('scrollTop').classList.toggle('v',window.scrollY>300)});
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus()}if(e.key==='Escape'){document.getElementById('mOverlay').classList.contains('open')?closeModal():clearSearch()}});
+document.getElementById('aTitre').addEventListener('keydown',e=>{if(e.key==='Enter')addOne()});
+document.getElementById('eTitre').addEventListener('keydown',e=>{if(e.key==='Enter')saveEdit()});
+
+load();popSel();render();
+</script>
+</body>
+</html>
